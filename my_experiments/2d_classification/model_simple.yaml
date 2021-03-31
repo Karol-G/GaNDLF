@@ -20,7 +20,7 @@ model:
 nested_training:
   testing: -2
   validation: -2
-num_epochs: 1
+num_epochs: 100
 opt: adam
 parallel_compute_command: ''
 patch_sampler: uniform
