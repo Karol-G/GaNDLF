@@ -27,7 +27,7 @@ patch_sampler: uniform
 patch_size: 
 - 128
 - 128
-patience: 1
+patience: 100
 q_max_length: 1
 q_num_workers: 0
 q_samples_per_volume: 1
