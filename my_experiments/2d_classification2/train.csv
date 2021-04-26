@@ -103,8 +103,6 @@ SubjectID,Channel_0,Label,ValueToPredict
 101,xray_dataset_covid19/train/PNEUMONIA/446B2CB6-B572-40AB-B01F-1910CA07086A.jpeg,xray_dataset_covid19/train/PNEUMONIA/446B2CB6-B572-40AB-B01F-1910CA07086A.jpeg,1
 102,xray_dataset_covid19/train/PNEUMONIA/1312A392-67A3-4EBF-9319-810CF6DA5EF6.jpeg,xray_dataset_covid19/train/PNEUMONIA/1312A392-67A3-4EBF-9319-810CF6DA5EF6.jpeg,1
 103,xray_dataset_covid19/train/PNEUMONIA/5931B64A-7B97-485D-BE60-3F1EA76BC4F0.jpeg,xray_dataset_covid19/train/PNEUMONIA/5931B64A-7B97-485D-BE60-3F1EA76BC4F0.jpeg,1
-104,xray_dataset_covid19/train/PNEUMONIA/41591_2020_819_Fig1_HTML.webp-day5.png,xray_dataset_covid19/train/PNEUMONIA/41591_2020_819_Fig1_HTML.webp-day5.png,1
-105,xray_dataset_covid19/train/PNEUMONIA/41591_2020_819_Fig1_HTML.webp-day10.png,xray_dataset_covid19/train/PNEUMONIA/41591_2020_819_Fig1_HTML.webp-day10.png,1
 106,xray_dataset_covid19/train/PNEUMONIA/80446565-E090-4187-A031-9D3CEAA586C8.jpeg,xray_dataset_covid19/train/PNEUMONIA/80446565-E090-4187-A031-9D3CEAA586C8.jpeg,1
 107,xray_dataset_covid19/train/PNEUMONIA/ARDSSevere.png,xray_dataset_covid19/train/PNEUMONIA/ARDSSevere.png,1
 108,xray_dataset_covid19/train/PNEUMONIA/B59DD164-51D5-40DF-A926-6A42DD52EBE8.jpeg,xray_dataset_covid19/train/PNEUMONIA/B59DD164-51D5-40DF-A926-6A42DD52EBE8.jpeg,1
@@ -132,7 +130,6 @@ SubjectID,Channel_0,Label,ValueToPredict
 130,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-a.jpg,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-a.jpg,1
 131,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-b.jpg,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-b.jpg,1
 132,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-c.jpg,xray_dataset_covid19/train/PNEUMONIA/jkms-35-e79-g001-l-c.jpg,1
-133,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g001-l-a.jpg,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g001-l-a.jpg,1
 134,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g002-l-a.jpg,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g002-l-a.jpg,1
 135,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g003-l-a.jpg,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e24-g003-l-a.jpg,1
 136,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e25-g001-l-a.jpg,xray_dataset_covid19/train/PNEUMONIA/kjr-21-e25-g001-l-a.jpg,1

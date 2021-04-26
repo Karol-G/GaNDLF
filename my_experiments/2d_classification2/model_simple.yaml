@@ -3,15 +3,15 @@
 version:
   {
     minimum: 0.0.7,
-    maximum: 0.0.8
+    maximum: 0.0.9.dev0
   }
 model:
   {
     dimension: 2, # the dimension of the model and dataset: defines dimensionality of computations
     base_filters: 32, # Set base filters: number of filters present in the initial module of the U-Net convolution; for IncU-Net, keep this divisible by 4
-    architecture: resunet, # options: unet, resunet, fcn, uinc
+    architecture: vgg11, # options: unet, resunet, fcn, uinc
     final_layer: sigmoid, # can be either sigmoid, softmax or none (none == regression)
-    class_list: [0,255], # Set the list of labels the model should train on and predict
+    class_list: [0,1], # Set the list of labels the model should train on and predict
     amp: False, # Set if you want to use Automatic Mixed Precision for your operations or not - options: True, False
     # n_channels: 3, # set the input channels - useful when reading RGB or images that have vectored pixel types
   }
@@ -19,7 +19,7 @@ metrics:
   - dice
 modality: rad
 # Patch size during training - 2D patch for breast images since third dimension is not patched 
-patch_size: [128,128]
+patch_size: [256,256]
 # Number of epochs
 num_epochs: 100
 patience: 100
@@ -70,19 +70,8 @@ data_augmentation:
   }
 data_preprocessing:
   {
-    # 'threshold':{
-    #   'min': 10, 
-    #   'max': 75
-    # },
-    # 'clip':{
-    #   'min': 10, 
-    #   'max': 75
-    # }, 
     'normalize',
-    # 'resample':{
-    #   'resolution': [1,2,3]
-    # },
-    #'resize': [128,128], # this is generally not recommended, as it changes image properties in unexpected ways
+    'resize': [512,512], # this is generally not recommended, as it changes image properties in unexpected ways
   }
 # data postprocessing node
 data_postprocessing:
