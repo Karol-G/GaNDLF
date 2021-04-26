@@ -17,6 +17,7 @@ from GANDLF.metrics import fetch_metric
 from GANDLF.parameterParsing import get_model, get_optimizer, get_scheduler
 from GANDLF.utils import get_date_time, send_model_to_device
 from GANDLF.data.ImagesFromDataFrame import ImagesFromDataFrame
+from medcam import medcam
 
 os.environ["TORCHIO_HIDE_CITATION_PROMPT"] = "1"  # hides torchio citation request
 
@@ -47,7 +48,7 @@ def get_loss_and_metrics(ground_truth, predicted, params):
         metric_output[metric] = metric_function(predicted, ground_truth, params).cpu().data.item()
     return loss, metric_output
 
-def step(model, image, label, params):
+def step(model, image, label, params, medcam=False):
     """
     Function that steps the model for a single batch
 
@@ -79,7 +80,7 @@ def step(model, image, label, params):
         print('Load_Percent   :', psutil.cpu_percent(interval=None))
         print('MemUtil_Percent:', psutil.virtual_memory()[2])
         print('|===========================================================================|\n|')
-        
+
     if params["model"]["dimension"] == 2:
         image = torch.squeeze(image, -1)
         if len(params['value_keys']) == 0: # squeeze label for segmentation only
@@ -89,14 +90,21 @@ def step(model, image, label, params):
             output = model(image)
     else:
         output = model(image)
+    if medcam:
+        output, attention_map = output
     # print("Output shape : ", output.shape, flush=True)
     # one-hot encoding of 'output' will probably be needed for segmentation
     loss, metric_output = get_loss_and_metrics(label, output, params)
     
     if params["model"]["dimension"] == 2:
         output = torch.unsqueeze(output, -1)
+        if medcam:
+            attention_map = torch.unsqueeze(attention_map, -1)
 
-    return loss, metric_output, output
+    if not medcam:
+        return loss, metric_output, output
+    else:
+        return loss, metric_output, output, attention_map
 
 
 def train_network(model, train_dataloader, optimizer, params):
@@ -189,7 +197,7 @@ def train_network(model, train_dataloader, optimizer, params):
     return average_epoch_train_loss, average_epoch_train_metric
 
 
-def validate_network(model, valid_dataloader, scheduler, params):
+def validate_network(model, valid_dataloader, scheduler, params, medcam=False):
     """
     Function to validate a network for a single epoch
 
@@ -227,6 +235,8 @@ def validate_network(model, valid_dataloader, scheduler, params):
 
     # Set the model to valid
     model.eval()
+    if medcam:
+        model.enable_medcam()
     for batch_idx, (subject) in enumerate(valid_dataloader):
         
         # constructing a new dict because torchio.GridSampler requires torchio.Subject, which requires torchio.Image to be present in initial dict, which the loader does not provide
@@ -252,6 +262,8 @@ def validate_network(model, valid_dataloader, scheduler, params):
         grid_sampler = torchio.inference.GridSampler(torchio.Subject(subject_dict), params['patch_size'])
         patch_loader = torch.utils.data.DataLoader(grid_sampler, batch_size=1)
         aggregator = torchio.inference.GridAggregator(grid_sampler)
+        if medcam:
+            attention_map_aggregator = torchio.inference.GridAggregator(grid_sampler)
         
         is_segmentation = True
         output_prediction = 0 # this is used for regression/classification
@@ -271,7 +283,11 @@ def validate_network(model, valid_dataloader, scheduler, params):
             label = label.to(params["device"])
             # print("Validation :", label.shape, image.shape, flush=True)
             patch_location = patches_batch[torchio.LOCATION]
-            loss, calculated_metrics, output = step(model, image, label, params)
+            result = step(model, image, label, params, medcam=medcam)
+            if not medcam:
+                loss, calculated_metrics, output = result
+            else:
+                loss, calculated_metrics, output, attention_map = result
             if is_segmentation:
                 aggregator.add_batch(output, patch_location)
             else:
@@ -279,12 +295,21 @@ def validate_network(model, valid_dataloader, scheduler, params):
                     output_prediction += output.cpu().data.item()# this probably needs customization for classification (majority voting or median, perhaps?)
                 else:
                     output_prediction += output
+            if medcam:
+                # for i in range(len(attention_map)):
+                #     model.save_attention_map(attention_map[i].squeeze(), raw_input=image[i].squeeze(-1))
+                attention_map_aggregator.add_batch(attention_map, patch_location)
         
         if is_segmentation:
             output_prediction = aggregator.get_output_tensor()
             # reverse one-hot encoding of 'output_prediction' will probably be needed for segmentation
         else:
             output_prediction = output_prediction / len(patch_loader) # final regression output
+
+        if medcam:
+            attention_map = attention_map_aggregator.get_output_tensor()
+            for i in range(len(attention_map)):
+                model.save_attention_map(attention_map[i].squeeze(), raw_input=image[i].squeeze(-1))
 
         ## this is currently broken
         # final_loss, final_metric = get_loss_and_metrics(label_ground_truth, output_prediction, params)
@@ -306,6 +331,8 @@ def validate_network(model, valid_dataloader, scheduler, params):
                         "Epoch Validation " + metric + " : ",
                         total_epoch_valid_metric[metric] / len(valid_dataloader),
                     )
+    if medcam:
+        model.disable_medcam()
 
     average_epoch_valid_loss = total_epoch_valid_loss / len(valid_dataloader)
     for metric in params["metrics"]:
@@ -329,6 +356,7 @@ def training_loop(
     params,
     output_dir,
     testing_data=None,
+    use_medcam=True
 ):
 
     # Some autodetermined factors
@@ -489,6 +517,9 @@ def training_loop(
         model, amp=params["model"]["amp"], device=params["device"], optimizer=optimizer
     )
 
+    if use_medcam:
+        model = medcam.inject(model, output_dir="attention_maps", save_maps=False, return_attention=True, enabled=False)
+
     # Setup a few variables for tracking
     best_loss = 1e7
     patience = 0
@@ -508,7 +539,7 @@ def training_loop(
             model, train_dataloader, optimizer, params
         )
         epoch_valid_loss, epoch_valid_metric = validate_network(
-            model, val_dataloader, scheduler, params
+            model, val_dataloader, scheduler, params, medcam=medcam
         )
         patience += 1
 
