@@ -38,7 +38,7 @@ def inferenceLoopRad(inferenceDataFromPickle, headers, device, parameters, outpu
     This is the main inference loop
     '''
     # extract variables form parameters dict
-    psize = parameters['psize']
+    patch_size = parameters['patch_size']
     q_max_length = parameters['q_max_length']
     q_samples_per_volume = parameters['q_samples_per_volume']
     q_num_workers = parameters['q_num_workers']
@@ -46,10 +46,10 @@ def inferenceLoopRad(inferenceDataFromPickle, headers, device, parameters, outpu
     augmentations = parameters['data_augmentation']
     preprocessing = parameters['data_preprocessing']
     which_model = parameters['model']['architecture']
-    if not('n_channels' in parameters['model']):
-        n_channels = len(headers['channelHeaders'])
+    if not('num_channels' in parameters['model']):
+        num_channels = len(headers['channelHeaders'])
     else:
-        n_channels = parameters['model']['n_channels']
+        num_channels = parameters['model']['num_channels']
 
     base_filters = parameters['model']['base_filters']
     amp = parameters['model']['amp']
@@ -63,10 +63,10 @@ def inferenceLoopRad(inferenceDataFromPickle, headers, device, parameters, outpu
 
     # Defining our model here according to parameters mentioned in the configuration file
     print("Number of dims     : ", parameters['model']['dimension'])
-    if 'n_channels' in parameters['model']:
-        print("Number of channels : ", parameters['model']['n_channels'])
+    if 'num_channels' in parameters['model']:
+        print("Number of channels : ", parameters['model']['num_channels'])
     print("Number of classes  : ", n_classList)
-    model = get_model(which_model, parameters['model']['dimension'], n_channels, n_classList, base_filters, final_convolution_layer = parameters['model']['final_layer'], psize = psize, batch_size = 1)
+    model = get_model(which_model, parameters['model']['dimension'], num_channels, n_classList, base_filters, final_convolution_layer = parameters['model']['final_layer'], patch_size = patch_size, batch_size = 1)
     # initialize problem type    
     is_regression, is_classification, is_segmentation = find_problem_type(headers, model.final_convolution_layer)
 
@@ -77,7 +77,7 @@ def inferenceLoopRad(inferenceDataFromPickle, headers, device, parameters, outpu
         n_classList = len(headers['predictionHeaders']) # ensure the output class list is correctly populated
 
     # Setting up the inference loader
-    inferenceDataForTorch = ImagesFromDataFrame(inferenceDataFromPickle, psize, headers, q_max_length, q_samples_per_volume, q_num_workers, q_verbose, sampler = parameters['patch_sampler'], train = False, augmentations = augmentations, preprocessing = preprocessing)
+    inferenceDataForTorch = ImagesFromDataFrame(inferenceDataFromPickle, patch_size, headers, q_max_length, q_samples_per_volume, q_num_workers, q_verbose, sampler = parameters['patch_sampler'], train = False, augmentations = augmentations, preprocessing = preprocessing)
     inference_loader = DataLoader(inferenceDataForTorch, batch_size=batch_size)
 
     # Loading the weights into the model
@@ -116,7 +116,7 @@ def inferenceLoopRad(inferenceDataFromPickle, headers, device, parameters, outpu
     loss_fn, MSE_requested = get_loss(loss_function)
 
     model.eval()
-    average_dice, average_loss = get_metrics_save_mask(model, device, inference_loader, psize, channel_keys, value_keys, class_list, loss_fn, is_segmentation, scaling_factor=scaling_factor, weights=None, save_mask=True, outputDir=outputDir)
+    average_dice, average_loss = get_metrics_save_mask(model, device, inference_loader, patch_size, channel_keys, value_keys, class_list, loss_fn, is_segmentation, scaling_factor=scaling_factor, weights=None, save_mask=True, outputDir=outputDir)
     print(average_dice, average_loss)
 
 # if os.name != 'nt':
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # # write parameters to pickle - this should not change for the different folds, so keeping is independent
-    psize = pickle.load(open(args.psize_pickle,"rb"))
+    patch_size = pickle.load(open(args.patch_size_pickle,"rb"))
     headers = pickle.load(open(args.headers_pickle,"rb"))
     label_header = pickle.load(open(args.label_header_pickle,"rb"))
     parameters = pickle.load(open(args.parameter_pickle,"rb"))
@@ -266,10 +266,10 @@ if __name__ == "__main__":
     elif parameters['modalities'] == 'path':
         if os.name != 'nt':
             inferenceLoopPath(inference_loader_pickle=inferenceDataFromPickle, 
-                            headers=headers, 
-                            parameters=parameters,
-                            outputDir=args.outputDir,
-                            device=args.device)
+                              headers=headers, 
+                              parameters=parameters,
+                              outputDir=args.outputDir,
+                              device=args.device)
     else:
         print('Please Select a modality between rad and path. Correct the option in the config file.')
         sys.exit(0)
