@@ -182,17 +182,21 @@ def ImagesFromDataFrame(dataframe,
                 subject_dict[str(channel)] = Image(str(dataframe[channel][patient]), type=torchio.INTENSITY)
             else:
                 img = sitk.ReadImage(str(dataframe[channel][patient]))
-                array = np.expand_dims(sitk.GetArrayFromImage(img), axis=0)
+                img_tensor = torch.from_numpy(sitk.GetArrayFromImage(img)).unsqueeze(0)
                 # print("Image shape : ", img.shape, flush=True)
                 # print("Array shape : ", array.shape, flush=True)
-                subject_dict[str(channel)] = Image(tensor=array, type=torchio.INTENSITY, path=dataframe[channel][patient])
+                if len(img_tensor) == 3: # this is for 2D images
+                    img_tensor = img_tensor.unsqueeze(0)
+                subject_dict[str(channel)] = Image(tensor=img_tensor, type=torchio.INTENSITY, path=dataframe[channel][patient])
             
             # if resize is requested, the perform per-image resize with appropriate interpolator
             if resize_images:
                 img = subject_dict[str(channel)].as_sitk()
                 img_resized = apply_resize(img, preprocessing_params=preprocessing)
-                array = np.expand_dims(sitk.GetArrayFromImage(img_resized), axis=0)
-                subject_dict[str(channel)] = Image(tensor=array, type=torchio.INTENSITY, path=dataframe[channel][patient])
+                img_tensor = torch.from_numpy(sitk.GetArrayFromImage(img_resized)).unsqueeze(0)
+                if len(img_tensor) == 3: # this is for 2D images
+                    img_tensor = img_tensor.unsqueeze(0)
+                subject_dict[str(channel)] = Image(tensor=img_tensor, type=torchio.INTENSITY, path=dataframe[channel][patient])
 
         # # for regression
         # if predictionHeaders:
@@ -205,15 +209,19 @@ def ImagesFromDataFrame(dataframe,
                 subject_dict['label'] = Image(str(dataframe[labelHeader][patient]), type=torchio.LABEL)
             else:
                 img = sitk.ReadImage(str(dataframe[labelHeader][patient]))
-                array = np.expand_dims(sitk.GetArrayFromImage(img), axis=0)
-                subject_dict['label'] = Image(tensor=array, type=torchio.LABEL, path=dataframe[labelHeader][patient])
+                img_tensor = torch.from_numpy(sitk.GetArrayFromImage(img)).unsqueeze(0)
+                if len(img_tensor) == 3: # this is for 2D images
+                    img_tensor = img_tensor.unsqueeze(0)
+                subject_dict['label'] = Image(tensor=img_tensor, type=torchio.LABEL, path=dataframe[labelHeader][patient])
 
             # if resize is requested, the perform per-image resize with appropriate interpolator
             if resize_images:
                 img = sitk.ReadImage(str(dataframe[labelHeader][patient]))
                 img_resized = apply_resize(img, preprocessing_params=preprocessing, interpolator=sitk.sitkNearestNeighbor)
-                array = np.expand_dims(sitk.GetArrayFromImage(img_resized), axis=0)
-                subject_dict['label'] = Image(tensor=array, type=torchio.LABEL, path=dataframe[channel][patient])
+                img_tensor = torch.from_numpy(sitk.GetArrayFromImage(img_resized)).unsqueeze(0)
+                if len(img_tensor) == 3: # this is for 2D images
+                    img_tensor = img_tensor.unsqueeze(0)
+                subject_dict['label'] = Image(tensor=img_tensor, type=torchio.LABEL, path=dataframe[channel][patient])
             
             subject_dict['path_to_metadata'] = str(dataframe[labelHeader][patient])
         else:
