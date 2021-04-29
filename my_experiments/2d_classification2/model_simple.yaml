@@ -49,12 +49,12 @@ nested_training:
 # all transforms: https://torchio.readthedocs.io/transforms/transforms.html?highlight=transforms
 data_augmentation:
   {
-   'spatial':{
-     'probability': 0.5
-   },
-   'kspace':{
-     'probability': 0.5
-   },
+   # 'spatial':{
+   #   'probability': 0.5
+   # },
+   # 'kspace':{
+   #   'probability': 0.5
+   # },
    'bias':{
      'probability': 0.5
    },
@@ -71,7 +71,6 @@ data_augmentation:
 data_preprocessing:
   {
     'normalize',
-    'resize': [512,512], # this is generally not recommended, as it changes image properties in unexpected ways
   }
 # data postprocessing node
 data_postprocessing:

@@ -74,4 +74,5 @@ def main():
         InferenceManager(dataframe=data_full, headers = headers, outputDir=model_path, parameters=parameters, device=device)
 
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     main()
